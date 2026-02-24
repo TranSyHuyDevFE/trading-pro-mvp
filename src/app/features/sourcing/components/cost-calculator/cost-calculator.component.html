@@ -1,0 +1,204 @@
+<!-- ★ BOTTOM SHEET OVERLAY -->
+<div
+  class="sheet-overlay"
+  [class.closing]="isClosing"
+  (click)="close()"
+>
+  <!-- ★ BOTTOM SHEET CONTAINER -->
+  <div
+    class="sheet-container"
+    [class.closing]="isClosing"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Handle kéo -->
+    <div class="sheet-handle"></div>
+
+    <!-- ===== HEADER: Thông tin xưởng đã chọn ===== -->
+    <div class="sheet-header">
+      <div class="header-title">
+        <ion-icon name="calculator-outline" color="primary"></ion-icon>
+        <h2>Bảng tính Landed Cost</h2>
+      </div>
+      <ion-button fill="clear" size="small" (click)="close()">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </div>
+
+    <!-- Vendor Info Badge - Auto fill từ card -->
+    <div class="vendor-badge">
+      <div class="vendor-badge-info">
+        <span class="vendor-badge-name">{{ vendor.name }}</span>
+        <span class="vendor-badge-location">
+          <ion-icon name="location-outline"></ion-icon>
+          {{ vendor.location }}
+        </span>
+      </div>
+      <div class="vendor-badge-price">
+        <span class="currency-label">Giá xưởng</span>
+        <span class="currency-value">{{ getCurrencySymbol() }}{{ vendor.price | number }}</span>
+      </div>
+    </div>
+
+    <!-- ===== FORM INPUTS ===== -->
+    <div class="input-section">
+      <div class="section-label">
+        <ion-icon name="create-outline"></ion-icon>
+        Thông số tính toán
+      </div>
+
+      <div class="input-grid">
+        <!-- Giá xưởng - Auto filled -->
+        <div class="input-item highlight">
+          <label>GIÁ XƯỜNG ({{ input.currency }})</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">{{ getCurrencySymbol() }}</span>
+            <input
+              type="number"
+              [(ngModel)]="input.price"
+              (ngModelChange)="calculate()"
+              step="0.1"
+            />
+          </div>
+          <span class="input-hint">← Tự động từ xưởng</span>
+        </div>
+
+        <!-- Tỷ giá -->
+        <div class="input-item">
+          <label>{{ getExchangeLabel() }}</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">×</span>
+            <input
+              type="number"
+              [(ngModel)]="input.exchange_rate"
+              (ngModelChange)="calculate()"
+              step="10"
+            />
+          </div>
+        </div>
+
+        <!-- VAT % -->
+        <div class="input-item">
+          <label>VAT (%)</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">%</span>
+            <input
+              type="number"
+              [(ngModel)]="input.vat_rate"
+              (ngModelChange)="calculate()"
+              step="0.5"
+            />
+          </div>
+        </div>
+
+        <!-- Phí vận chuyển / SP -->
+        <div class="input-item">
+          <label>Phí vận chuyển / SP</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">₫</span>
+            <input
+              type="number"
+              [(ngModel)]="input.shipping_fee_per_unit"
+              (ngModelChange)="calculate()"
+              step="1000"
+            />
+          </div>
+        </div>
+
+        <!-- Số lượng -->
+        <div class="input-item full-width">
+          <label>Số lượng đặt hàng</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">🔢</span>
+            <input
+              type="number"
+              [(ngModel)]="input.quantity"
+              (ngModelChange)="calculate()"
+              [min]="1"
+              step="10"
+            />
+            <span class="input-suffix">cái</span>
+          </div>
+          <span class="input-hint" *ngIf="vendor.moq > 1">MOQ: {{ vendor.moq }} cái</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CÔNG THỨC ===== -->
+    <div class="formula-section">
+      <div class="formula-label">📐 Công thức</div>
+      <div class="formula-box">
+        <span class="formula-text">
+          Giá vốn = (Giá xưởng × Tỷ giá) + VAT + Phí vận chuyển
+        </span>
+      </div>
+    </div>
+
+    <!-- ===== KẾT QUẢ TÍNH TOÁN ===== -->
+    <div class="result-section" *ngIf="result">
+      <div class="section-label">
+        <ion-icon name="stats-chart-outline"></ion-icon>
+        Chi tiết Landed Cost
+      </div>
+
+      <!-- Breakdown -->
+      <div class="result-breakdown">
+        <div class="breakdown-row">
+          <span class="breakdown-label">
+            <ion-icon name="pricetag-outline"></ion-icon>
+            Giá xưởng quy đổi
+          </span>
+          <span class="breakdown-formula">{{ getCurrencySymbol() }}{{ input.price | number }} × {{ input.exchange_rate | number }}</span>
+          <span class="breakdown-value">{{ fmtVND(result.price_vnd_per_unit) }}</span>
+        </div>
+
+        <div class="breakdown-row">
+          <span class="breakdown-label">
+            <ion-icon name="receipt-outline"></ion-icon>
+            VAT ({{ input.vat_rate }}%)
+          </span>
+          <span class="breakdown-formula">{{ fmtVND(result.price_vnd_per_unit) }} × {{ input.vat_rate }}%</span>
+          <span class="breakdown-value">+ {{ fmtVND(result.vat_per_unit) }}</span>
+        </div>
+
+        <div class="breakdown-row">
+          <span class="breakdown-label">
+            <ion-icon name="airplane-outline"></ion-icon>
+            Phí vận chuyển
+          </span>
+          <span class="breakdown-formula"></span>
+          <span class="breakdown-value">+ {{ fmtVND(result.shipping_per_unit) }}</span>
+        </div>
+      </div>
+
+      <!-- ★ GIÁ VỐN - LANDED COST -->
+      <div class="result-highlight">
+        <div class="landed-cost-row">
+          <div class="landed-cost-label">
+            <span class="landed-icon">💎</span>
+            <div>
+              <span class="landed-title">GIÁ VỐN / SẢN PHẨM</span>
+              <span class="landed-subtitle">Landed Cost per Unit</span>
+            </div>
+          </div>
+          <span class="landed-cost-value">{{ fmtVND(result.landed_cost_per_unit) }}</span>
+        </div>
+      </div>
+
+      <!-- Tổng tiền -->
+      <div class="total-row">
+        <span class="total-label">
+          Tổng giá vốn ({{ input.quantity }} SP)
+        </span>
+        <span class="total-value">{{ fmtVND(result.total_cost) }}</span>
+      </div>
+    </div>
+
+    <!-- Nút đóng -->
+    <div class="sheet-footer">
+      <ion-button expand="block" fill="outline" color="medium" (click)="close()">
+        <ion-icon name="close-outline" slot="start"></ion-icon>
+        Đóng bảng tính
+      </ion-button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,472 @@
+// ===========================
+// BOTTOM SHEET - LANDED COST
+// ===========================
+
+:host {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99999;
+}
+
+// Overlay mờ phía sau
+.sheet-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+
+  &.closing {
+    animation: fadeOut 0.28s ease-in forwards;
+  }
+
+  // Desktop: center modal vertically too
+  @media (min-width: 768px) {
+    align-items: center;
+  }
+}
+
+// Bottom Sheet chính
+.sheet-container {
+  background: #fafbfc;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 12px 20px 28px;
+  animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &.closing {
+    animation: slideDown 0.28s ease-in forwards;
+  }
+
+  // Desktop: centered modal with max-width and full rounded corners
+  @media (min-width: 768px) {
+    max-width: 560px;
+    max-height: 85vh;
+    border-radius: 20px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+    padding: 20px 28px 32px;
+    animation: scaleIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &.closing {
+      animation: scaleOut 0.22s ease-in forwards;
+    }
+  }
+}
+
+// Handle kéo
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
+  margin: 0 auto 12px;
+}
+
+// ===== HEADER =====
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    ion-icon {
+      font-size: 22px;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin: 0;
+    }
+  }
+}
+
+// ===== VENDOR BADGE (Auto-fill info) =====
+.vendor-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #eef2ff, #e8f0fe);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+
+  .vendor-badge-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+
+    .vendor-badge-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vendor-badge-location {
+      font-size: 12px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+
+      ion-icon {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .vendor-badge-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    margin-left: 12px;
+
+    .currency-label {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .currency-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: #e74c3c;
+      letter-spacing: -0.5px;
+    }
+  }
+}
+
+// ===== SECTION LABELS =====
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  ion-icon {
+    font-size: 16px;
+  }
+}
+
+// ===== INPUT GRID =====
+.input-section {
+  margin-bottom: 14px;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  .input-item {
+    &.full-width {
+      grid-column: 1 / -1;
+    }
+
+    &.highlight .input-wrapper {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: #f0f4ff;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      background: white;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0 10px;
+      height: 42px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &:focus-within {
+        border-color: var(--ion-color-primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+
+      .input-prefix {
+        font-size: 13px;
+        font-weight: 700;
+        color: #94a3b8;
+        margin-right: 6px;
+        flex-shrink: 0;
+      }
+
+      .input-suffix {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-left: 6px;
+        flex-shrink: 0;
+      }
+
+      input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
+        background: transparent;
+        width: 100%;
+        min-width: 0;
+
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+          opacity: 0.5;
+        }
+      }
+    }
+
+    .input-hint {
+      display: block;
+      font-size: 10px;
+      color: var(--ion-color-primary);
+      margin-top: 3px;
+      font-weight: 500;
+    }
+  }
+}
+
+// ===== CÔNG THỨC =====
+.formula-section {
+  margin-bottom: 14px;
+
+  .formula-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+  }
+
+  .formula-box {
+    background: linear-gradient(135deg, #fef3c7, #fef9c3);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+
+    .formula-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #92400e;
+      font-family: 'SF Mono', 'Menlo', monospace;
+    }
+  }
+}
+
+// ===== KẾT QUẢ =====
+.result-section {
+  margin-bottom: 14px;
+}
+
+// Breakdown
+.result-breakdown {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+
+  .breakdown-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f1f5f9;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .breakdown-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #475569;
+      flex-shrink: 0;
+
+      ion-icon {
+        font-size: 16px;
+        color: #94a3b8;
+      }
+    }
+
+    .breakdown-formula {
+      font-size: 10px;
+      color: #94a3b8;
+      text-align: center;
+      flex: 1;
+      padding: 0 4px;
+    }
+
+    .breakdown-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      text-align: right;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// ★ LANDED COST HIGHLIGHT
+.result-highlight {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
+
+  .landed-cost-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .landed-cost-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .landed-icon {
+        font-size: 28px;
+      }
+
+      .landed-title {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.9);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+
+      .landed-subtitle {
+        display: block;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 1px;
+      }
+    }
+
+    .landed-cost-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.5px;
+    }
+  }
+}
+
+// Tổng tiền
+.total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+
+  .total-label {
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  .total-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+// Footer
+.sheet-footer {
+  ion-button {
+    --border-radius: 12px;
+    font-weight: 600;
+  }
+}
+
+// ===== ANIMATIONS =====
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+

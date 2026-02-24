@@ -1,0 +1,249 @@
+// ===========================
+// SOURCING PAGE - RESPONSIVE
+// ===========================
+
+// Page wrapper: center content on large screens
+.page-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// ===== SEARCH CONTAINER =====
+.search-container {
+  padding: 16px;
+
+  .search-inner {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  ion-searchbar {
+    margin-bottom: 12px;
+  }
+
+  .search-actions {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+
+    .result-filter {
+      flex-shrink: 0;
+
+      ion-select {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        min-height: 44px;
+
+        &::part(label) {
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        &::part(text) {
+          color: var(--ion-color-primary);
+          font-weight: 700;
+        }
+
+        &::part(icon) {
+          color: #94a3b8;
+        }
+      }
+    }
+
+    ion-button {
+      flex: 1;
+      --border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .reset-btn {
+      flex: 0 0 auto;
+      --border-radius: 12px;
+      --padding-start: 10px;
+      --padding-end: 10px;
+    }
+  }
+}
+
+// ===== RESULTS =====
+.results-container {
+  padding: 0 16px 16px;
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    p {
+      font-size: 14px;
+      margin: 0;
+
+      strong {
+        color: var(--ion-color-primary);
+        font-weight: 700;
+      }
+    }
+
+    .sort-filter {
+      display: flex;
+      align-items: center;
+      background: rgba(var(--ion-color-primary-rgb), 0.05);
+      border-radius: 8px;
+      padding: 2px 8px;
+      gap: 4px;
+
+      ion-icon {
+        font-size: 16px;
+      }
+
+      ion-select {
+        --padding-start: 4px;
+        --padding-end: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ion-color-medium);
+        min-height: 32px;
+      }
+    }
+  }
+
+  // ★ Country Filter Chips
+  .country-filter {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+
+    // Ẩn scrollbar
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 14px;
+      border-radius: 24px;
+      border: 1.5px solid #e2e8f0;
+      background: white;
+      font-size: 13px;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: var(--ion-color-primary);
+        background: #f0f4ff;
+      }
+
+      &.active {
+        background: var(--ion-color-primary);
+        border-color: var(--ion-color-primary);
+        color: white;
+        box-shadow: 0 2px 8px rgba(56, 97, 251, 0.3);
+
+        .chip-count {
+          background: rgba(255, 255, 255, 0.25);
+          color: white;
+        }
+      }
+
+      .chip-flag {
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      .chip-label {
+        font-weight: 600;
+      }
+
+      .chip-count {
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 10px;
+        min-width: 20px;
+        text-align: center;
+        transition: all 0.2s ease;
+      }
+    }
+  }
+}
+
+// ===== VENDOR GRID - Responsive =====
+.vendor-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+
+  // Tablet (≥768px): 2 columns
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  // Desktop (≥1200px): 3 columns
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+// ===== Desktop enhancements =====
+@media (min-width: 768px) {
+  .search-container {
+    padding: 24px 32px;
+
+    .search-inner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      ion-searchbar {
+        flex: 1;
+        margin-bottom: 0;
+      }
+
+      ion-button {
+        flex-shrink: 0;
+        width: auto;
+        --padding-start: 24px;
+        --padding-end: 24px;
+      }
+    }
+  }
+
+  .results-container {
+    padding: 0 32px 32px;
+
+    .result-header {
+      max-width: 100%;
+    }
+  }
+}
+
+@media (min-width: 1200px) {
+  .search-container {
+    padding: 28px 48px;
+  }
+
+  .results-container {
+    padding: 0 48px 48px;
+  }
+}
