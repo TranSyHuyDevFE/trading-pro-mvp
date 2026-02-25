@@ -35,6 +35,10 @@ $shadow-premium: 0 8px 32px rgba(79, 70, 229, 0.25);
   padding: 0 !important;
   position: relative;
   overflow: visible;
+  // Cho phép inner-wrap nhận auto margin
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
 
   // Subtle noise overlay for premium texture
   &::before {
@@ -58,6 +62,7 @@ $shadow-premium: 0 8px 32px rgba(79, 70, 229, 0.25);
     z-index: 1;
   }
 }
+
 
 // ===== ROW 1: BRAND =====
 .header-brand-row {
@@ -577,22 +582,31 @@ $shadow-premium: 0 8px 32px rgba(79, 70, 229, 0.25);
   }
 }
 
-// ===== DESKTOP ENHANCEMENTS =====
+// ===== DESKTOP ENHANCEMENTS — Center header content =====
+
+// ★ Inner wrap: giữ gradient full-width, nhưng căn giữa nội dung
+.header-inner-wrap {
+  width: 100%;
+  // Mobile: no constraint
+}
+
 @media (min-width: 768px) {
+  .header-inner-wrap {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .header-brand-row {
     padding: 14px 24px 8px;
   }
 
   .header-search-row {
     padding: 6px 24px 10px;
-
-    .search-box-premium {
-      max-width: 680px;
-    }
   }
 
   .header-filter-row {
-    padding: 4px 24px 14px;
+    padding: 4px 24px 12px;
   }
 
   .results-container {
@@ -601,26 +615,27 @@ $shadow-premium: 0 8px 32px rgba(79, 70, 229, 0.25);
 }
 
 @media (min-width: 1200px) {
+  .header-inner-wrap {
+    max-width: 1060px;
+  }
+
   .header-brand-row {
-    padding: 16px 40px 8px;
+    padding: 16px 32px 8px;
   }
 
   .header-search-row {
-    padding: 8px 40px 12px;
-
-    .search-box-premium {
-      max-width: 760px;
-    }
+    padding: 8px 32px 12px;
   }
 
   .header-filter-row {
-    padding: 4px 40px 16px;
+    padding: 4px 32px 14px;
   }
 
   .results-container {
     padding: 0 40px 40px;
   }
 }
+
 
 // ===== DARK MODE SUPPORT =====
 @media (prefers-color-scheme: dark) {

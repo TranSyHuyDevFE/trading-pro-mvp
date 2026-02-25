@@ -2,118 +2,114 @@
 <ion-header class="sourcing-header ion-no-border">
   <ion-toolbar class="header-toolbar">
 
-    <!-- Row 1: Brand + Actions -->
-    <div class="header-brand-row">
-      <div class="brand-left">
-        <div class="brand-logo-wrap">
-          <div class="brand-logo">🛒</div>
-          <div class="brand-pulse"></div>
+    <!-- ★ Inner wrap: căn giữa trên web, full-width trên mobile -->
+    <div class="header-inner-wrap">
+
+      <!-- Row 1: Brand + Actions -->
+      <div class="header-brand-row">
+        <div class="brand-left">
+          <div class="brand-logo-wrap">
+            <div class="brand-logo">🛒</div>
+            <div class="brand-pulse"></div>
+          </div>
+          <div class="brand-info">
+            <span class="brand-name">Trading Pro</span>
+            <span class="brand-tagline">Tìm xưởng · Tính giá vốn</span>
+          </div>
         </div>
-        <div class="brand-info">
-          <span class="brand-name">Trading Pro</span>
-          <span class="brand-tagline">Tìm xưởng · Tính giá vốn</span>
-        </div>
-      </div>
 
-      <!-- Header Right Actions -->
-      <div class="header-actions-right">
-        <!-- Nút Reset — chỉ hiện khi đã có kết quả -->
-        <button class="header-action-btn reset-btn" *ngIf="hasSearched" (click)="resetSearch()">
-          <ion-icon name="refresh-outline"></ion-icon>
-          <span>Làm mới</span>
-        </button>
+        <!-- Header Right Actions -->
+        <div class="header-actions-right">
+          <!-- Nút Reset — chỉ hiện khi đã có kết quả -->
+          <button class="header-action-btn reset-btn" *ngIf="hasSearched" (click)="resetSearch()">
+            <ion-icon name="refresh-outline"></ion-icon>
+            <span>Làm mới</span>
+          </button>
 
-        <!-- ⚙️ Nút Cài đặt -->
-        <button class="header-settings-btn" (click)="goToSettings()" aria-label="Cài đặt">
-          <ion-icon name="settings-outline"></ion-icon>
-        </button>
-      </div>
-    </div>
-
-    <!-- Row 2: Search Bar — Shopee/Taobao style -->
-    <div class="header-search-row">
-      <div class="search-box-premium">
-        <div class="search-input-wrap">
-          <ion-icon name="search-outline" class="search-prefix-icon"></ion-icon>
-          <input
-            type="text"
-            class="search-input-native"
-            [(ngModel)]="searchKeyword"
-            (keyup.enter)="onSearch()"
-            placeholder="Nhập sản phẩm cần tìm xưởng..."
-          />
-          <button class="search-clear-btn" *ngIf="searchKeyword" (click)="searchKeyword = ''">
-            <ion-icon name="close-circle"></ion-icon>
+          <!-- ⚙️ Nút Cài đặt -->
+          <button class="header-settings-btn" (click)="goToSettings()" aria-label="Cài đặt">
+            <ion-icon name="settings-outline"></ion-icon>
           </button>
         </div>
-        <button class="search-submit-btn" (click)="onSearch()" [disabled]="!searchKeyword.trim()">
-          <ion-icon name="search-outline"></ion-icon>
-          <span>Tìm kiếm</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Row 3a: Chỉ hiện khi CHƯA search — chọn số xưởng trước -->
-    <div class="header-filter-row header-filter-row--always" *ngIf="!hasSearched">
-
-      <!-- Filter: Số lượng xưởng -->
-      <div class="filter-pill">
-        <ion-icon name="grid-outline" class="pill-icon"></ion-icon>
-        <ion-select
-          [(ngModel)]="maxResults"
-          interface="popover"
-          labelPlacement="hidden"
-          class="pill-select"
-        >
-          <ion-select-option *ngFor="let opt of resultOptions" [value]="opt">
-            {{ opt }} xưởng
-          </ion-select-option>
-        </ion-select>
       </div>
 
-      <!-- Label gợi ý nhỏ -->
-      <span class="filter-hint-label" *ngIf="!hasSearched">
-        <ion-icon name="information-circle-outline"></ion-icon>
-        Chọn số xưởng trước khi tìm
-      </span>
-
-    </div>
-
-    <!-- Row 3b: Chỉ hiện sau khi search — Sort + Country chips -->
-    <div class="header-filter-row header-filter-row--results" *ngIf="hasSearched">
-
-      <!-- Filter: Sắp xếp -->
-      <div class="filter-pill">
-        <ion-icon name="swap-vertical-outline" class="pill-icon"></ion-icon>
-        <ion-select
-          [(ngModel)]="sortOrder"
-          (ionChange)="onSortChange($event)"
-          interface="popover"
-          labelPlacement="hidden"
-          class="pill-select"
-        >
-          <ion-select-option value="none">Mặc định</ion-select-option>
-          <ion-select-option value="asc">Giá ↑</ion-select-option>
-          <ion-select-option value="desc">Giá ↓</ion-select-option>
-        </ion-select>
+      <!-- Row 2: Search Bar -->
+      <div class="header-search-row">
+        <div class="search-box-premium">
+          <div class="search-input-wrap">
+            <ion-icon name="search-outline" class="search-prefix-icon"></ion-icon>
+            <input
+              type="text"
+              class="search-input-native"
+              [(ngModel)]="searchKeyword"
+              (keyup.enter)="onSearch()"
+              placeholder="Nhập sản phẩm cần tìm xưởng..."
+            />
+            <button class="search-clear-btn" *ngIf="searchKeyword" (click)="searchKeyword = ''">
+              <ion-icon name="close-circle"></ion-icon>
+            </button>
+          </div>
+          <button class="search-submit-btn" (click)="onSearch()" [disabled]="!searchKeyword.trim()">
+            <ion-icon name="search-outline"></ion-icon>
+          </button>
+        </div>
       </div>
 
-      <!-- Divider -->
-      <div class="filter-divider"></div>
+      <!-- Row 3a: Chỉ hiện khi CHƯA search — chọn số xưởng trước -->
+      <div class="header-filter-row header-filter-row--always" *ngIf="!hasSearched">
+        <div class="filter-pill">
+          <ion-icon name="grid-outline" class="pill-icon"></ion-icon>
+          <ion-select
+            [(ngModel)]="maxResults"
+            interface="popover"
+            labelPlacement="hidden"
+            class="pill-select"
+          >
+            <ion-select-option *ngFor="let opt of resultOptions" [value]="opt">
+              {{ opt }} xưởng
+            </ion-select-option>
+          </ion-select>
+        </div>
 
-      <!-- Filter: Quốc gia chips -->
-      <div class="country-chips-wrap">
-        <button
-          *ngFor="let c of countryOptions"
-          class="country-chip-btn"
-          [class.active]="selectedCountry === c.value"
-          (click)="filterByCountry(c.value)"
-        >
-          <span class="chip-flag">{{ c.flag }}</span>
-          <span class="chip-count-badge" *ngIf="c.value !== 'ALL'">{{ getCountryCount(c.value) }}</span>
-        </button>
+        <span class="filter-hint-label">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          Chọn số xưởng trước khi tìm
+        </span>
       </div>
-    </div>
+
+      <!-- Row 3b: Chỉ hiện sau khi search — Sort + Country chips -->
+      <div class="header-filter-row header-filter-row--results" *ngIf="hasSearched">
+        <div class="filter-pill">
+          <ion-icon name="swap-vertical-outline" class="pill-icon"></ion-icon>
+          <ion-select
+            [(ngModel)]="sortOrder"
+            (ionChange)="onSortChange($event)"
+            interface="popover"
+            labelPlacement="hidden"
+            class="pill-select"
+          >
+            <ion-select-option value="none">Mặc định</ion-select-option>
+            <ion-select-option value="asc">Giá ↑</ion-select-option>
+            <ion-select-option value="desc">Giá ↓</ion-select-option>
+          </ion-select>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="country-chips-wrap">
+          <button
+            *ngFor="let c of countryOptions"
+            class="country-chip-btn"
+            [class.active]="selectedCountry === c.value"
+            (click)="filterByCountry(c.value)"
+          >
+            <span class="chip-flag">{{ c.flag }}</span>
+            <span class="chip-count-badge" *ngIf="c.value !== 'ALL'">{{ getCountryCount(c.value) }}</span>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /header-inner-wrap -->
 
   </ion-toolbar>
 </ion-header>
