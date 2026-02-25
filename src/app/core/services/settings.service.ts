@@ -15,6 +15,9 @@ export interface AppSettings {
   /** Tỷ giá CNY → VND do user nhập tay. Mặc định: 3500 */
   exchangeRateManual: number;
 
+  /** Timestamp lần cuối đồng bộ tỷ giá từ API (ms) */
+  lastSyncTimestamp?: number;
+
   // Extended settings (giữ tương thích với SettingsPage cũ)
   defaultWeightKg: number;     // Cân nặng mặc định / SP (kg). Default: 0.5
   serviceFeeRate: number;      // % Phí dịch vụ. Default: 3
@@ -97,9 +100,19 @@ export class SettingsService {
 
   /**
    * Đồng bộ tỷ giá CNY/VND từ Supabase database.
-   * Kết quả sẽ được đẩy thẳng vào BehaviorSubject để giao diện auto-update.
+   * ★ Throttling: Chỉ gọi API nếu lần cuối cách đây > 1 tiếng
    */
   async syncLiveExchangeRate(): Promise<void> {
+    const ONE_HOUR = 60 * 60 * 1000;
+    const now = Date.now();
+    const lastSync = this.snapshot.lastSyncTimestamp || 0;
+
+    // Nếu vừa mới đồng bộ trong vòng 1 tiếng, bỏ qua để tiết kiệm tài nguyên
+    if (now - lastSync < ONE_HOUR) {
+      console.log('🕒 Tỷ giá vừa được đồng bộ gần đây, bỏ qua lượt này.');
+      return;
+    }
+
     try {
       const supabase = this.supabaseService.getClient();
       const { data, error } = await supabase
@@ -109,12 +122,15 @@ export class SettingsService {
         .single();
 
       if (!error && data?.rate) {
-        // Cập nhật tỷ giá hệ thống vào setting hiện tại (sẽ làm thay đổi UI)
-        this.update({ exchangeRateManual: data.rate });
+        // Cập nhật tỷ giá hệ thống và cập nhật luôn timestamp đồng bộ
+        this.update({ 
+          exchangeRateManual: data.rate,
+          lastSyncTimestamp: now 
+        });
         console.log(`✅ Đã đồng bộ tỷ giá Tệ trực tiếp từ DB: 1 CNY = ${data.rate} VND`);
       }
     } catch (err) {
-      console.warn('⚠️ Không thể đồng bộ tỷ giá API, dùng giá trị lưu local:', err);
+      console.warn('⚠️ Không thể đồng bộ tỷ giá API:', err);
     }
   }
 
@@ -125,21 +141,22 @@ export class SettingsService {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        // Merge với defaults để đảm bảo key mới luôn có giá trị
         return { ...DEFAULT_SETTINGS, ...parsed };
       }
 
-      // Thử migrate từ key cũ (trading_settings) nếu có
+      // Migrate từ key cũ (trading_settings) nếu có và chưa có key mới
       const legacy = localStorage.getItem('trading_settings');
       if (legacy) {
         const old = JSON.parse(legacy);
-        return {
+        const migrated = {
           vatPercent:         old.tax_rate          ?? DEFAULT_SETTINGS.vatPercent,
           shippingFeePerKg:   old.shipping_fee_per_kg ?? DEFAULT_SETTINGS.shippingFeePerKg,
           exchangeRateManual: old.exchange_rate      ?? DEFAULT_SETTINGS.exchangeRateManual,
           defaultWeightKg:    old.default_weight_kg  ?? DEFAULT_SETTINGS.defaultWeightKg,
           serviceFeeRate:     old.service_fee_rate   ?? DEFAULT_SETTINGS.serviceFeeRate,
         };
+        this.saveToStorage(migrated);
+        return migrated;
       }
     } catch {
       // Parse error → dùng default

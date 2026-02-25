@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IonicModule, ToastController } from '@ionic/angular';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { SettingsService } from '../../core/services/settings.service';
 
 
@@ -529,7 +530,7 @@ import { SettingsService } from '../../core/services/settings.service';
     }
   `]
 })
-export class SettingsPage implements OnInit {
+export class SettingsPage implements OnInit, OnDestroy {
   // Form model — ánh xạ 1-1 với AppSettings
   vatPercent         = 10;
   shippingFeePerKg   = 2000;
@@ -540,6 +541,8 @@ export class SettingsPage implements OnInit {
   lastRateUpdate = 'Chưa cập nhật';
   isSaving = false;
 
+  private settingsSub!: Subscription;
+
   constructor(
     private toastController: ToastController,
     private settingsService: SettingsService,
@@ -547,13 +550,26 @@ export class SettingsPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Load từ SettingsService (đã merge localStorage + defaults)
-    const s = this.settingsService.snapshot;
-    this.vatPercent         = s.vatPercent;
-    this.shippingFeePerKg   = s.shippingFeePerKg;
-    this.exchangeRateManual = s.exchangeRateManual;
-    this.defaultWeightKg    = s.defaultWeightKg;
-    this.serviceFeeRate     = s.serviceFeeRate;
+    // ★ Subscribe SettingsService — realtime update khi settings thay đổi (VD: tỷ giá lấy từ API)
+    this.settingsSub = this.settingsService.settings$.subscribe(s => {
+      this.vatPercent         = s.vatPercent;
+      this.shippingFeePerKg   = s.shippingFeePerKg;
+      this.exchangeRateManual = s.exchangeRateManual;
+      this.defaultWeightKg    = s.defaultWeightKg;
+      this.serviceFeeRate     = s.serviceFeeRate;
+      
+      this.lastRateUpdate = new Date().toLocaleTimeString('vi-VN', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.settingsSub) {
+      this.settingsSub.unsubscribe();
+    }
   }
 
   goBack(): void {
