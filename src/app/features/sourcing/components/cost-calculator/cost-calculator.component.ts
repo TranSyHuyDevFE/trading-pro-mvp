@@ -1,22 +1,21 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { VendorResult, VendorCurrency } from '../../../../core/services/ai-sourcing.service';
 import {
   CalculatorService,
   LandedCostInput,
   LandedCostResult,
 } from '../../../../core/services/calculator.service';
+import { SettingsService, AppSettings } from '../../../../core/services/settings.service';
 
 /**
  * CostCalculatorComponent - Bottom Sheet Bảng tính Landed Cost
  *
  * ★ Công thức: Giá vốn = (Giá xưởng × Tỷ giá) + VAT + Phí vận chuyển
- *
- * - Trồi lên từ đáy màn hình (slide up animation)
- * - Auto-fill giá và đơn vị tệ khi chọn từ Vendor Card
- * - Realtime tính toán khi thay đổi bất kỳ thông số nào
+ * ★ Realtime: Tự động cập nhật khi Settings thay đổi (SettingsService subscribe)
  */
 @Component({
   selector: 'app-cost-calculator',
@@ -25,18 +24,18 @@ import {
   templateUrl: './cost-calculator.component.html',
   styleUrls: ['./cost-calculator.component.scss'],
 })
-export class CostCalculatorComponent implements OnInit {
+export class CostCalculatorComponent implements OnInit, OnDestroy {
   @Input() vendor!: VendorResult;
   @Output() onClose = new EventEmitter<void>();
 
-  // Thông số đầu vào - sẽ được auto-fill từ vendor
+  // Thông số đầu vào — auto-fill từ vendor + settings
   input: LandedCostInput = {
-    price: 0,
-    currency: 'CNY',
-    quantity: 100,
-    exchange_rate: 3500,
-    vat_rate: 10,
-    shipping_fee_per_unit: 15000,
+    price:                0,
+    currency:             'CNY',
+    quantity:             100,
+    exchange_rate:        3500,
+    vat_rate:             10,
+    shipping_fee_per_unit: 2000,
   };
 
   // Kết quả tính toán
@@ -45,63 +44,51 @@ export class CostCalculatorComponent implements OnInit {
   // Trạng thái animation
   isClosing = false;
 
-  constructor(private calculatorService: CalculatorService) {}
+  // Settings hiện tại (để hiển thị trong template nếu cần)
+  currentSettings!: AppSettings;
+
+  private settingsSub!: Subscription;
+
+  constructor(
+    private calculatorService: CalculatorService,
+    private settingsService: SettingsService
+  ) {}
 
   ngOnInit(): void {
-    // ★ AUTO-FILL: Giá, currency và MOQ từ vendor
-    this.input.price = this.vendor.price;
+    // ★ AUTO-FILL từ Vendor
+    this.input.price    = this.vendor.price;
     this.input.currency = this.vendor.currency;
     this.input.quantity = Math.max(this.vendor.moq, 100);
 
-    // ★ Tự set tỷ giá mặc định theo loại tiền
-    this.setDefaultExchangeRate(this.vendor.currency);
+    // ★ Subscribe SettingsService — realtime update khi settings thay đổi
+    this.settingsSub = this.settingsService.settings$.subscribe(settings => {
+      this.currentSettings = settings;
+      this.applySettings(settings);
+      this.calculate(); // Tính lại ngay khi settings đổi
+    });
+  }
 
-    // Load settings từ localStorage (nếu có)
-    this.loadSavedSettings();
-
-    // Tính toán ngay lập tức
-    this.calculate();
+  ngOnDestroy(): void {
+    this.settingsSub?.unsubscribe();
   }
 
   /**
-   * Set tỷ giá mặc định theo currency
+   * ★ Apply settings vào input — đây là trái tim reactive
+   * Chỉ override tỷ giá nếu currency là CNY (settings chỉ lưu CNY rate)
    */
-  private setDefaultExchangeRate(currency: VendorCurrency): void {
-    switch (currency) {
-      case 'CNY':
-        this.input.exchange_rate = 3500;
-        break;
-      case 'USD':
-        this.input.exchange_rate = 25500;
-        break;
-      case 'VND':
-        this.input.exchange_rate = 1; // Đã là VND, không cần quy đổi
-        break;
-      case 'KHR':
-        this.input.exchange_rate = 6.2; // ~6.2 VND / 1 KHR
-        break;
-    }
+  private applySettings(settings: AppSettings): void {
+    // Tỷ giá: lấy từ settings theo currency
+    this.input.exchange_rate = this.settingsService.getExchangeRate(this.vendor.currency);
+
+    // VAT từ settings
+    this.input.vat_rate = settings.vatPercent;
+
+    // Phí vận chuyển / SP = phí/kg × cân nặng/SP
+    this.input.shipping_fee_per_unit = this.settingsService.getShippingPerUnit();
   }
 
   /**
-   * Load thông số đã lưu từ Settings tab
-   */
-  private loadSavedSettings(): void {
-    const saved = localStorage.getItem('trading_settings');
-    if (saved) {
-      const settings = JSON.parse(saved);
-      // Chỉ override tỷ giá từ settings nếu vendor dùng CNY
-      if (this.vendor.currency === 'CNY') {
-        this.input.exchange_rate = settings.exchange_rate || 3500;
-      }
-      this.input.vat_rate = settings.tax_rate || 10;
-      this.input.shipping_fee_per_unit =
-        (settings.shipping_fee_per_kg || 25000) * (settings.default_weight_kg || 0.5);
-    }
-  }
-
-  /**
-   * ★ TÍNH TOÁN REALTIME
+   * ★ TÍNH TOÁN REALTIME — gọi mỗi khi bất kỳ input nào thay đổi
    */
   calculate(): void {
     this.result = this.calculatorService.calculateLandedCost(this.input);
@@ -123,7 +110,7 @@ export class CostCalculatorComponent implements OnInit {
       case 'USD': return '$';
       case 'VND': return '₫';
       case 'KHR': return '៛';
-      default: return '';
+      default:    return '';
     }
   }
 
@@ -136,7 +123,7 @@ export class CostCalculatorComponent implements OnInit {
       case 'USD': return 'TỶ GIÁ (USD → VND)';
       case 'VND': return 'TỶ GIÁ (VND)';
       case 'KHR': return 'TỶ GIÁ (KHR → VND)';
-      default: return 'TỶ GIÁ';
+      default:    return 'TỶ GIÁ';
     }
   }
 

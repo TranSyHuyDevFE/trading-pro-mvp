@@ -1,19 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { IonicModule, ToastController, LoadingController } from '@ionic/angular';
-import { CommonModule } from '@angular/common';
+import { IonicModule, ToastController } from '@ionic/angular';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
+import { SettingsService } from '../../core/services/settings.service';
 
-/**
- * Thông số cài đặt mặc định
- */
-interface DefaultSettings {
-  shipping_fee_per_kg: number;
-  tax_rate: number;
-  service_fee_rate: number;
-  exchange_rate: number;
-  default_weight_kg: number;
-}
 
 @Component({
   selector: 'app-settings',
@@ -62,7 +52,7 @@ interface DefaultSettings {
             <input
               type="number"
               class="card-input"
-              [(ngModel)]="settings.exchange_rate"
+              [(ngModel)]="exchangeRateManual"
               placeholder="3500"
             />
             <span class="card-unit">VND</span>
@@ -84,8 +74,8 @@ interface DefaultSettings {
             <input
               type="number"
               class="card-input"
-              [(ngModel)]="settings.shipping_fee_per_kg"
-              placeholder="25000"
+              [(ngModel)]="shippingFeePerKg"
+              placeholder="2000"
             />
             <span class="card-unit">VND/kg</span>
           </div>
@@ -106,7 +96,7 @@ interface DefaultSettings {
             <input
               type="number"
               class="card-input"
-              [(ngModel)]="settings.default_weight_kg"
+              [(ngModel)]="defaultWeightKg"
               placeholder="0.5"
             />
             <span class="card-unit">kg</span>
@@ -128,7 +118,7 @@ interface DefaultSettings {
             <input
               type="number"
               class="card-input"
-              [(ngModel)]="settings.tax_rate"
+              [(ngModel)]="vatPercent"
               placeholder="10"
             />
             <span class="card-unit">%</span>
@@ -150,7 +140,7 @@ interface DefaultSettings {
             <input
               type="number"
               class="card-input"
-              [(ngModel)]="settings.service_fee_rate"
+              [(ngModel)]="serviceFeeRate"
               placeholder="3"
             />
             <span class="card-unit">%</span>
@@ -540,61 +530,60 @@ interface DefaultSettings {
   `]
 })
 export class SettingsPage implements OnInit {
-  settings: DefaultSettings = {
-    shipping_fee_per_kg: 25000,
-    tax_rate: 10,
-    service_fee_rate: 3,
-    exchange_rate: 3500,
-    default_weight_kg: 0.5,
-  };
+  // Form model — ánh xạ 1-1 với AppSettings
+  vatPercent         = 10;
+  shippingFeePerKg   = 2000;
+  exchangeRateManual = 3500;
+  defaultWeightKg    = 0.5;
+  serviceFeeRate     = 3;
 
   lastRateUpdate = 'Chưa cập nhật';
   isSaving = false;
 
   constructor(
     private toastController: ToastController,
-    private loadingController: LoadingController,
+    private settingsService: SettingsService,
     private location: Location
   ) {}
 
   ngOnInit(): void {
-    this.loadSettings();
+    // Load từ SettingsService (đã merge localStorage + defaults)
+    const s = this.settingsService.snapshot;
+    this.vatPercent         = s.vatPercent;
+    this.shippingFeePerKg   = s.shippingFeePerKg;
+    this.exchangeRateManual = s.exchangeRateManual;
+    this.defaultWeightKg    = s.defaultWeightKg;
+    this.serviceFeeRate     = s.serviceFeeRate;
   }
 
   goBack(): void {
     this.location.back();
   }
 
-  loadSettings(): void {
-    const saved = localStorage.getItem('trading_settings');
-    if (saved) {
-      this.settings = JSON.parse(saved);
-    }
-  }
-
   async saveSettings(): Promise<void> {
     this.isSaving = true;
 
-    const loading = await this.loadingController.create({
-      message: 'Đang lưu cài đặt...',
-      spinner: 'crescent',
-      duration: 1000,
+    // ★ Cập nhật qua SettingsService — BehaviorSubject phát ngay lập tức
+    // CostCalculator đang subscribe sẽ nhận được thay đổi realtime
+    this.settingsService.update({
+      vatPercent:         Number(this.vatPercent),
+      shippingFeePerKg:   Number(this.shippingFeePerKg),
+      exchangeRateManual: Number(this.exchangeRateManual),
+      defaultWeightKg:    Number(this.defaultWeightKg),
+      serviceFeeRate:     Number(this.serviceFeeRate),
     });
-    await loading.present();
 
-    setTimeout(async () => {
-      localStorage.setItem('trading_settings', JSON.stringify(this.settings));
-      await loading.dismiss();
-      this.isSaving = false;
+    // Hiệu ứng nhỏ để user biết đã lưu
+    await new Promise(r => setTimeout(r, 400));
+    this.isSaving = false;
 
-      const toast = await this.toastController.create({
-        message: '✅ Đã lưu cài đặt thành công!',
-        duration: 2000,
-        position: 'top',
-        color: 'success',
-        icon: 'checkmark-circle-outline',
-      });
-      await toast.present();
-    }, 800);
+    const toast = await this.toastController.create({
+      message: '✅ Đã lưu cài đặt! Giá vốn đã được cập nhật.',
+      duration: 2500,
+      position: 'top',
+      color: 'success',
+      icon: 'checkmark-circle-outline',
+    });
+    await toast.present();
   }
 }
