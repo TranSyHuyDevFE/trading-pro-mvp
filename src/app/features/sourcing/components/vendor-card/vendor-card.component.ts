@@ -86,16 +86,17 @@ import { VendorResult, VendorCurrency } from '../../../../core/services/ai-sourc
         </p>
 
         <!-- ★ NÚT CHỌN - Mở Bảng tính Landed Cost -->
-        <div class="select-action">
-          <ion-button
-            expand="block"
-            color="success"
-            (click)="selectVendor()"
-          >
-            <ion-icon name="calculator-outline" slot="start"></ion-icon>
-            Chọn — Tính giá vốn
-          </ion-button>
-        </div>
+        <button class="cta-select-btn" (click)="selectVendor()">
+          <span class="cta-shimmer"></span>
+          <span class="cta-content">
+            <span class="cta-icon">🧮</span>
+            <span class="cta-text">
+              <span class="cta-main">Tính giá vốn</span>
+              <span class="cta-sub">Landed cost · Phân tích lợi nhuận</span>
+            </span>
+            <ion-icon name="chevron-forward-outline" class="cta-arrow"></ion-icon>
+          </span>
+        </button>
 
         <!-- 2 Action Buttons phụ -->
         <div class="vendor-actions">

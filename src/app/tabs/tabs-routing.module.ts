@@ -19,13 +19,7 @@ const routes: Routes = [
         loadComponent: () =>
           import('../features/audit/audit.page').then((m) => m.AuditPage),
       },
-      {
-        path: 'settings',
-        loadComponent: () =>
-          import('../features/settings/settings.page').then(
-            (m) => m.SettingsPage
-          ),
-      },
+
       {
         path: '',
         redirectTo: '/tabs/sourcing',

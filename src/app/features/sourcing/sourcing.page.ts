@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -52,10 +53,14 @@ export class SourcingPage implements OnInit {
   // ★ Sắp xếp theo giá
   sortOrder: 'none' | 'asc' | 'desc' = 'none';
 
-  constructor(private aiSourcingService: AiSourcingService) {}
+  constructor(
+    private aiSourcingService: AiSourcingService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.loadMockData();
+    // Không load sẵn mock data, để màn hình empty chờ user nhập từ khóa
+    // this.loadMockData();
   }
 
   /**
@@ -156,6 +161,15 @@ export class SourcingPage implements OnInit {
     this.selectedCountry = 'ALL';
     this.showCalculator = false;
     this.selectedVendor = null;
+    this.maxResults = 10;
+    this.sortOrder = 'none';
+  }
+
+  /**
+   * Điều hướng sang trang Cài đặt
+   */
+  goToSettings(): void {
+    this.router.navigate(['/tabs/settings']);
   }
 
   /**
