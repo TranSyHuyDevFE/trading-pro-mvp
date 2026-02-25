@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { SupabaseService } from './supabase.service';
 
 /**
  * Cấu trúc Settings — 3 biến cốt lõi cho Landed Cost
@@ -45,6 +46,11 @@ export class SettingsService {
   /** Observable để subscribe — component tự động cập nhật khi settings thay đổi */
   readonly settings$: Observable<AppSettings> = this._settings$.asObservable();
 
+  constructor(private supabaseService: SupabaseService) {
+    // Tự động gọi Supabase lấy tỷ giá thực tế khi khởi động App
+    this.syncLiveExchangeRate();
+  }
+
   /** Snapshot hiện tại — dùng khi cần giá trị tức thì mà không cần subscribe */
   get snapshot(): AppSettings {
     return this._settings$.getValue();
@@ -86,6 +92,29 @@ export class SettingsService {
       case 'VND': return 1;
       case 'KHR': return 6.2;
       default:    return this.snapshot.exchangeRateManual;
+    }
+  }
+
+  /**
+   * Đồng bộ tỷ giá CNY/VND từ Supabase database.
+   * Kết quả sẽ được đẩy thẳng vào BehaviorSubject để giao diện auto-update.
+   */
+  async syncLiveExchangeRate(): Promise<void> {
+    try {
+      const supabase = this.supabaseService.getClient();
+      const { data, error } = await supabase
+        .from('exchange_rates')
+        .select('rate')
+        .eq('pair', 'CNY/VND')
+        .single();
+
+      if (!error && data?.rate) {
+        // Cập nhật tỷ giá hệ thống vào setting hiện tại (sẽ làm thay đổi UI)
+        this.update({ exchangeRateManual: data.rate });
+        console.log(`✅ Đã đồng bộ tỷ giá Tệ trực tiếp từ DB: 1 CNY = ${data.rate} VND`);
+      }
+    } catch (err) {
+      console.warn('⚠️ Không thể đồng bộ tỷ giá API, dùng giá trị lưu local:', err);
     }
   }
 
